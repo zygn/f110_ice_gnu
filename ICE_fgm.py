@@ -69,8 +69,8 @@ class Pure_Pursuit:
         self.drive_pub = rospy.Publisher("/ICE/drive", AckermannDriveStamped, queue_size = 10 )
 
     def get_waypoint(self):
-#         file_wps = np.genfromtxt('../f1tenth_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
-        file_wps = np.genfromtxt('/catkin_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
+        file_wps = np.genfromtxt('../f1tenth_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
+        # file_wps = np.genfromtxt('catkin_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
         temp_waypoint = []
         for i in file_wps:
             wps_point = [i[0],i[1],0]
@@ -164,10 +164,12 @@ class Pure_Pursuit:
             steering_angle = steering_gain*0.5 #+ p_error*0.8 + self.d_error*0.2
         
             # self.speed_gain = -8
-            if self.accel_d > 8:
+            if self.accel_d > 7:
                 self.speed_gain = 1
+                #print("speed_down",self.speed_gain,self.accel_d)
             else:
-                self.speed_gain = -1
+                self.speed_gain = -2
+                #print("speed_up",self.speed_gain,self.accel_d)
             self.mu = 0
             #print("M",steering_angle,self.d_error)
             # if np.fabs(steering_angle) > 0.4:
@@ -206,10 +208,10 @@ class Pure_Pursuit:
                         
                 elif (i >= self.front_idx - 5) and (i <= self.front_idx + 5):
                     #print("elelif in")
-                    if (self.scan_filtered[i] <= 20):
+                    if (self.scan_filtered[i] <= 25):
                         if (self.accel_d >= 9):
                             #steering_angle = -steering_angle
-                            self.speed_gain += 0.005
+                            self.speed_gain += 0.003
                             self.mu = 1
                             #print(self.speed_gain)
                             # if self.speed_gain >= 0:
@@ -219,7 +221,7 @@ class Pure_Pursuit:
                         #print("speed_up",self.speed_gain)
                         if self.speed_gain <= -6:
                             self.speed_gain = -6
-                    if (self.mu == 1) and (self.accel_d <= 7):
+                    if (self.mu == 1) and (self.accel_d <= 8):
                         self.mu = 0
                         #print("what??????")
                         
