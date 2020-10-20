@@ -33,12 +33,12 @@ RUN mkdir -p /catkin_ws/src
 
 # Copying
 # COPY ./f110_ice_gnu /catkin_ws/src/
+RUN cd /catkin_ws/src && rm -rf car_duri && echo $HOME
 
 # Cloning
 RUN cd /catkin_ws/src/ && \
     git clone https://github.com/zygn/f110_ice_gnu.git car_duri && \
-	cd car_duri && \
-	chmod +x .
+    chomd +x -R car_duri
 
 # Building your ROS packages
 RUN /bin/bash -c "source /opt/ros/melodic/setup.bash; cd catkin_ws; catkin_make; source devel/setup.bash"
