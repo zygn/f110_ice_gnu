@@ -60,9 +60,9 @@ class Pure_Pursuit:
         self.theta_for = self.PI/3
         self.gap_cont = 0
 
-        rospy.Subscriber('/scan', LaserScan, self.subCallback_scan, queue_size = 10)
-        rospy.Subscriber('/odom', Odometry, self.Odome, queue_size = 10)
-        self.drive_pub = rospy.Publisher("/drive", AckermannDriveStamped, queue_size = 10 )
+        rospy.Subscriber('/ICE/scan', LaserScan, self.subCallback_scan, queue_size = 10)
+        rospy.Subscriber('/ICE/odom', Odometry, self.Odome, queue_size = 10)
+        self.drive_pub = rospy.Publisher("/ICE/drive", AckermannDriveStamped, queue_size = 10 )
 
     def get_waypoint(self):
 #         file_wps = np.genfromtxt('../f1tenth_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
