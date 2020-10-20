@@ -64,12 +64,13 @@ class Pure_Pursuit:
         self.theta_for = self.PI/3
         self.gap_cont = 0
 
-        rospy.Subscriber('/scan', LaserScan, self.subCallback_scan, queue_size = 10)
-        rospy.Subscriber('/odom', Odometry, self.Odome, queue_size = 10)
-        self.drive_pub = rospy.Publisher("/drive", AckermannDriveStamped, queue_size = 10 )
+        rospy.Subscriber('/ICE/scan', LaserScan, self.subCallback_scan, queue_size = 10)
+        rospy.Subscriber('/ICE/odom', Odometry, self.Odome, queue_size = 10)
+        self.drive_pub = rospy.Publisher("/ICE/drive", AckermannDriveStamped, queue_size = 10 )
 
     def get_waypoint(self):
-        file_wps = np.genfromtxt('/catkin_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
+        file_wps = np.genfromtxt('../f1tenth_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
+        # file_wps = np.genfromtxt('catkin_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
         temp_waypoint = []
         for i in file_wps:
             wps_point = [i[0],i[1],0]
@@ -160,102 +161,79 @@ class Pure_Pursuit:
                 M += 1
         if M > 539:
             
-            steering_angle = steering_gain*0.6 #+ p_error*0.8 + self.d_error*0.2
+            steering_angle = steering_gain*0.5 #+ p_error*0.8 + self.d_error*0.2
         
             # self.speed_gain = -8
-            self.speed_gain = 0
+            if self.accel_d > 8:
+                self.speed_gain = 1
+            else:
+                self.speed_gain = -1
             self.mu = 0
             #print("M",steering_angle,self.d_error)
-            if np.fabs(steering_angle) > 0.4:
-                print("WOW",steering_angle)
-
-
-        # a = self.scan_Hi[0]
-        # b = self.scan_Hi[180]
-        # c = self.scan_Hi[360]
-        # d = self.scan_Hi[540]
-        # e = self.scan_Hi[720]
-        # f = self.scan_Hi[900]
-        # g = self.scan_Hi[1079]
-        
-        # if d > 20:
-            
-        #     if  (f*np.sqrt(2) - 0.08 <= e) and (e <= f*np.sqrt(2) + 0.08) and (f*np.sqrt(2) - 0.08 <= g) and (g <= f*np.sqrt(2) + 0.08) and (M < 400):
-        #         #print("Left")
-        #         self.speed_gain = -5
-        #     elif (b*np.sqrt(2) - 0.08 <= c) and (c <= b*np.sqrt(2) + 0.08) and (b*np.sqrt(2) - 0.08 <= a) and (a <= b*np.sqrt(2) + 0.08) and (M < 400):
-        #         #print("Right")
-        #         self.speed_gain = -5
-        #     else:
-        #         pass
-        # else:
-        #     self.speed_gain += 0.1
-        # if self.speed_gain < -4:
-        #         self.speed_gain = -5
-        # if d > 20:
-        #     if  (f*np.sqrt(2) - 0.05 <= e) and (e <= f*np.sqrt(2) + 0.05) and (f*np.sqrt(2) - 0.05 <= g) and (g <= f*np.sqrt(2) + 0.05) and (M < 400):
-        #         #print("Left")
-        #         self.speed_gain = - 5
-        #     elif (b*np.sqrt(2) - 0.05 <= c) and (c <= b*np.sqrt(2) + 0.05) and (b*np.sqrt(2) - 0.05 <= a) and (a <= b*np.sqrt(2) + 0.05) and (M < 400):
-        #         #print("Right")
-        #         self.speed_gain = - 5
-        #     else:
-        #         pass
-        # elif (self.speed_gain <= -4) and (d < 20):
-        #     self.speed_gain = 0 
+            # if np.fabs(steering_angle) > 0.4:
+            #     print("WOW",steering_angle)
 
 
         for i in range(270,self.scan_range-270):
             if i > 0 and self.scan_filtered[i-1] != 0:
-                if (self.scan_filtered[i] > 20) and (self.scan_filtered[i-1]*4.25 < self.scan_filtered[i]):
-                    if (i >= self.front_idx - 20) and (i <= self.front_idx + 20):
-                        if(self.scan_filtered[i-1] < (self.THRESHOLD+20)):
+                if self.scan_filtered[i] > 25 and (self.scan_filtered[i-1]*6 < self.scan_filtered[i]):
+                    if (i >= self.front_idx - 5) and (i <= self.front_idx + 5):
+                        if(self.scan_filtered[i-1] < (self.THRESHOLD+14)):
                             steering_angle *= 1.8
-                            self.speed_gain += 0.05
-                            self.mu = 1
-                            print("first num",steering_angle, self.speed_gain,self.scan_filtered[i-1])
-                elif (self.scan_filtered[i] < 10) and (self.scan_filtered[i-1]*1.7 < self.scan_filtered[i]):
-                    if (i >= self.front_idx - 10) and (i <= self.front_idx + 10):
-                        #print(i,"num",self.scan_filtered[i-1],self.scan_filtered[i])
-                        if(self.scan_filtered[i] < (self.THRESHOLD+10)):
-                            if self.speed_gain >= 4:
-                                self.speed_gain = -1
-                            steering_angle *= 1.1
-                            self.speed_gain += 0.15
-                            #print("for in",steering_angle)
-                            print("speed_down", self.speed_gain)
+                            self.speed_gain = 1
+                            #self.mu = 1
+                            #print("first num",steering_angle,self.scan_filtered[i-1], self.scan_filtered[i])
                         else:
-                            steering_angle *= 1.005
-                            self.speed_gain -= 0.0025
-                            #print("for in else",steering_angle)
-                elif (i >= self.front_idx - 15) and (i <= self.front_idx + 15):
-                    if (self.mu == 0) and (self.scan_filtered[i] > 25):
-                        self.speed_gain -= 0.0005
-                        #print("speed_up",self.speed_gain)
-                        if self.speed_gain <= -4:
-                            self.speed_gain = -4
-                    elif self.speed_gain <= -4:
-                        self.speed_gain = 0
+                            self.mu = 0
+                elif (self.scan_filtered[i] < 5) and (self.scan_filtered[i-1]*2.5 > self.scan_filtered[i]):
+                    if (i >= self.front_idx - 2) and (i <= self.front_idx + 2):
+                        if(self.scan_filtered[i] < self.THRESHOLD) and (self.scan_filtered[i] > 2):
+                            if self.speed_gain >= 2:
+                                self.speed_gain = -1
+                            steering_angle *= 1
+                            self.speed_gain += 0.5
+                            #print("for in",self.speed_gain)
+                            #print("speed_down", self.speed_gain)
+                        elif ((self.scan_filtered[i-360] <= 1) and (self.scan_filtered[i-320] <= 1) or ((self.scan_filtered[i+360] <= 1) and (self.scan_filtered[i+400] <= 1))):
+                            if self.speed_gain <= -1:
+                                steering_angle *= 1
+                                self.speed_gain = -1
+                            else:
+                                steering_angle *= 1
+                                self.speed_gain -= 0.005
+                            #print("real",self.scan_filtered[i])
+                            #print(i,"num",self.scan_filtered[i-1],self.scan_filtered[i])
                         
-
+                elif (i >= self.front_idx - 5) and (i <= self.front_idx + 5):
+                    #print("elelif in")
+                    if (self.scan_filtered[i] <= 20):
+                        if (self.accel_d >= 9):
+                            #steering_angle = -steering_angle
+                            self.speed_gain += 0.005
+                            self.mu = 1
+                            #print(self.speed_gain)
+                            # if self.speed_gain >= 0:
+                            #     self.speed_gain = 0
+                    elif (self.mu == 0) and (self.scan_filtered[i] > 20):
+                        self.speed_gain -= 0.0075
+                        #print("speed_up",self.speed_gain)
+                        if self.speed_gain <= -6:
+                            self.speed_gain = -6
+                    if (self.mu == 1) and (self.accel_d <= 7):
+                        self.mu = 0
+                        #print("what??????")
+                        
         right_idx = 180
         left_idx = 900
         if (self.scan_filtered[right_idx] != 0 and self.scan_filtered[left_idx] != 0) and (self.scan_filtered[right_idx] < 1.8) and (self.scan_filtered[left_idx] < 1.8):
-            if (self.speed_gain != 0) :
+            if self.accel_d > 8:
+                #print("reset",steering_angle, self.accel_d)
+                #steering_angle = 0 -steering_angle
+                self.speed_gain = self.speed_gain
+                
+            elif (self.speed_gain != 0) :
                 self.speed_gain = 0
                 self.mu = 0
-                print("reset",self.scan_filtered[right_idx],self.scan_filtered[left_idx])
-            # if (self.steering_gain != 0):
-            #     self.steering_gain = 0
-                
-                        
-            #if i == 809:
-                #print("for end")
-        #if np.fabs(self.steering_gain) > 0:
-        #    print("for out",self.steering_gain)
-
-        # if steering_angle < 0:
-        #     self.steering_gain = -self.steering_gain 
 
         if (np.fabs(steering_angle) > self.PI/3):
             speed = self.SPEED_MIN
@@ -264,47 +242,19 @@ class Pure_Pursuit:
             speed = (float)(-(3/self.PI)*(self.SPEED_MAX-self.SPEED_MIN)*np.fabs(self.max_angle)+self.SPEED_MAX)
             speed = np.fabs(speed)
         
-
-        # if speed < self.speed_gain:
-        #     speed = self.SPEED_MIN
-        #     self.speed_gain = 0
-
-        # if (self.speed_gain <= -4) and ((self.scan_filtered[540] != 0) and (self.scan_filtered[540] < 20)):
-        #     self.speed_gain = 0
-        #     print("rr")
         if self.speed_gain >= 3:
             self.speed_gain = 3
-
-        # M = 0
-        # for i in range(270,self.scan_range-270):
-        #     if (self.scan_filtered[i] != 0) and (self.scan_filtered[i] < self.THRESHOLD+3):
-        #         M += 1
-        # if M > 539:
-            
-        #     steering_angle = steering_gain*0.00006# + p_error*0.6 + self.d_error*0.8
-        #     print("M",steering_angle)
-        #     self.speed_gain = -5 
-        #     speed = 1.5
-        
 
         accel = speed - self.speed_gain
         if accel < self.SPEED_MIN:
             accel = self.SPEED_MIN
-        # if self.speed_up == 1:
-        #     print("accel",accel)
-        #     self.speed_up = 0
-        
-        # if (self.mu == 0) and (np.fabs(steering_angle) < np.fabs(self.steering_gain)):
-        #     self.steering_gain = 0
-
-        
         
         steering = steering_angle # + self.steering_gain
 
         self.ackermann_data.drive.steering_angle = steering
         self.ackermann_data.drive.steering_angle_velocity = 0
         self.ackermann_data.drive.speed = accel
-        #print(accel)
+        #print(self.speed_gain)
         self.ackermann_data.drive.acceleration = 0
         self.ackermann_data.drive.jerk = 0
 
