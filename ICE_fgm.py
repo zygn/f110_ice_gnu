@@ -70,7 +70,7 @@ class Pure_Pursuit:
 
     def get_waypoint(self):
 #         file_wps = np.genfromtxt('../f1tenth_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
-        file_wps = np.genfromtxt('catkin_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
+        file_wps = np.genfromtxt('/catkin_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
         temp_waypoint = []
         for i in file_wps:
             wps_point = [i[0],i[1],0]
