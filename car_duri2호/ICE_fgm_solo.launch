@@ -1,0 +1,9 @@
+<launch>
+
+    <include file="$(find f1tenth_gym_ros)/launch/gym_bridge_host.launch" />
+
+    <node name="Carminator" pkg="car_duri" type="ICE_fgm.py" output="screen">
+
+    </node>
+
+</launch>
