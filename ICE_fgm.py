@@ -17,7 +17,7 @@ class Pure_Pursuit:
         self.PI = 3.141592
         self.rf_distance = 2.5
         self.RACECAR_LENGTH = 0.325
-        self.SPEED_MAX = rospy.get_param('max_speed',9.0)
+        self.SPEED_MAX = rospy.get_param('max_speed',10.0)
         self.SPEED_MIN = rospy.get_param('min_speed', 1.5)
         self.RATE = rospy.get_param('rate', 100)
         self.ROBOT_SCALE = rospy.get_param('robot_scale', 0.35)
@@ -65,7 +65,6 @@ class Pure_Pursuit:
         self.drive_pub = rospy.Publisher("/ICE/drive", AckermannDriveStamped, queue_size = 10 )
 
     def get_waypoint(self):
-        # file_wps = np.genfromtxt('../f1tenth_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
         file_wps = np.genfromtxt('/catkin_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
         temp_waypoint = []
         for i in file_wps:
@@ -151,19 +150,6 @@ class Pure_Pursuit:
             if self.scan_Hi[i] < 15:
                 M += 1
 
-        N = 0
-        for i in range(500,580):
-            if self.scan_Hi[i] < 15:
-                N = N + 1
-
-        L = 0
-        for i in range(530,550):
-            if self.scan_Hi[i] < 3:
-                L = L + 1
-
-        # print("M",M)
-        # print("N",N)
-    
 
         a = self.scan_Hi[0]
         b = self.scan_Hi[180]
@@ -185,99 +171,12 @@ class Pure_Pursuit:
                 pass
 
 
-
-        # if d > 20:
-        #     if  (f*np.sqrt(2) - 0.1 <= e) and (e <= f*np.sqrt(2) + 0.1) and (f*np.sqrt(2) - 0.1 <= g) and (g <= f*np.sqrt(2) + 0.1) and (M < 400):
-        #         print("Left")
-        #         self.speed_gain = self.speed_gain - 5
-        #     elif (b*np.sqrt(2) - 0.1 <= c) and (c <= b*np.sqrt(2) + 0.1) and (b*np.sqrt(2) - 0.1 <= a) and (a <= b*np.sqrt(2) + 0.1) and (M < 400):
-        #         print("Right")
-        #         self.speed_gain = self.speed_gain - 5
-        #     else:
-        #         pass
-
-                
-        # for i in range(270,self.scan_range-270):
-        #     if (i > 0) and (self.scan_filtered[i-1] != 0):
-                # if (i >= self.front_idx - 15) and (i <= self.front_idx + 15):
-                #     if self.scan_filtered[i] > 20:
-                        
-                #         self.speed_gain -= 50
-                #         print("speed_up",self.speed_gain)
-                #         self.speed_up = 1
-
-                # if (self.scan_filtered[i-1]*2.0 < self.scan_filtered[i]):
-                #     if (i >= self.front_idx - 30) and (i <= self.front_idx + 30):
-                #         if(self.scan_filtered[i] < (self.THRESHOLD+12)):
-                #             self.steering_gain += 0.0005
-                #             self.speed_gain = 2.5
-                #         else:
-                #             self.steering_gain -= 0.05
-                #             self.speed_gain -= 0.25
-                #             #print("for in else",self.steering_gain)
-                ########################################################################
-                # if (self.scan_filtered[i-1]*1.8 < self.scan_filtered[i]):
-                #     if (i >= self.front_idx - 10) and (i <= self.front_idx + 10):
-                #         if(self.scan_filtered[i] < (self.THRESHOLD+5)):
-                #             print("Sibal")
-                #             self.steering_gain += 0.125
-                #             self.speed_gain = 0.5
-                #         else:
-                #             self.steering_gain -= 0.05
-                #             self.speed_gain -= 0.25
-                #########################################################################
-                            #print("for in else",self.steering_gain)
-            #if i == 809:
-                #print("for end")
-        #if np.fabs(self.steering_gain) > 0:
-        #    print("for out",self.steering_gain)
-
-        # if steering_angle < 0:
-        #     self.steering_gain = -self.steering_gain 
-
         if (np.fabs(steering_angle) > self.PI/8):
             speed = self.SPEED_MIN
             self.speed_gain = 0
         else:
             speed = (float)(-(3/self.PI)*(self.SPEED_MAX-self.SPEED_MIN)*np.fabs(self.max_angle)+self.SPEED_MAX)
             speed = np.fabs(speed)
-
-        # if speed < self.speed_gain:
-        #     speed = self.SPEED_MIN
-        #     self.speed_gain = 0
-
-
-
-        # M = 0
-
-        # for i in range(360,720):
-        #     if self.scan_Hi[i] < 4:
-        #         M = M + 1
-
-
-        # if M > 180:
-        #     self.speed_gain = self.speed_gain + 1
-        # else:
-        #     if d > 10:
-        #         self.speed_gain = self.speed_gain - 1
-        #     else:
-        #         self.speed_gain = self.speed_gain + 0.1
-        # print(M)
-
-
-
-
-        # for i in range(500,580):
-        #     if i < 540:
-        #         if self.scan_Hi[i] < 10:
-        #             steering_angle = steering_angle + 0.001
-        #     elif i > 540:
-        #         if self.scan_Hi[i] < 10:
-        #             steering_angle = steering_angle - 0.001
-        #     if self.scan_Hi[540] < 5:
-        #         self.speed_gain = self.speed_gain + 0.05
-
-
 
 
         accel = speed - self.speed_gain
@@ -294,19 +193,17 @@ class Pure_Pursuit:
 
 
 
-        for i in range(536,546):
-            if self.scan_Hi[i] < 20:
-                accel = 10
-                if self.scan_Hi[i] < 13:
-                    accel = 8
-                    if self.scan_Hi[i] < 7:
-                        accel = 6.5
-                        if self.scan_Hi[i] < 5:
-                            accel = 5
-                            if self.scan_Hi[i] < 3:
-                                accel = 2
-                                if self.scan_Hi[i] < 1:
-                                    accel = 1
+        for i in range(537,544):
+            if self.scan_Hi[i] < 13:
+                accel = 8
+                if self.scan_Hi[i] < 7:
+                    accel = 6.5
+                    if self.scan_Hi[i] < 5:
+                        accel = 5
+                        if self.scan_Hi[i] < 3:
+                            accel = 2
+                            if self.scan_Hi[i] < 1:
+                                accel = 1
 
 
 
@@ -334,7 +231,6 @@ class Pure_Pursuit:
         self.scan_range = len(msg_sub.ranges)
         self.front_idx = (int)(self.scan_range/2)
         
-        #scan_ori = [0]*self.scan_range
         self.scan_origin = [0]*self.scan_range
         self.scan_filtered = [0]*self.scan_range
         self.scan_Hi = [0]*self.scan_range
