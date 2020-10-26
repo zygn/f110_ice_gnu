@@ -31,6 +31,7 @@ class Pure_Pursuit:
         self.ackermann_data.drive.jerk = 0
         self.ackermann_data.drive.steering_angle = 0
         self.ackermann_data.drive.steering_angle_velocity = 0
+        self.ackermann_data.drive.speed = 20
         self.scan_Hi = []
         
         self.scan_range = 0
@@ -60,13 +61,16 @@ class Pure_Pursuit:
         self.theta_for = self.PI/3
         self.gap_cont = 0
 
+        self.accel_d_avg = 1
+        self.accel_d = []
+        self.mu = 5
+
         rospy.Subscriber('/ICE/scan', LaserScan, self.subCallback_scan, queue_size = 10)
         rospy.Subscriber('/ICE/odom', Odometry, self.Odome, queue_size = 10)
         self.drive_pub = rospy.Publisher("/ICE/drive", AckermannDriveStamped, queue_size = 10 )
 
     def get_waypoint(self):
-#         file_wps = np.genfromtxt('../f1tenth_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
-        file_wps = np.genfromtxt('/catkin_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
+        file_wps = np.genfromtxt('../f1tenth_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
         temp_waypoint = []
         for i in file_wps:
             wps_point = [i[0],i[1],0]
@@ -197,22 +201,42 @@ class Pure_Pursuit:
         for i in range(537,544):
             if self.scan_Hi[i] < 13:
                 accel = 8
+                self.mu = 0
                 if self.scan_Hi[i] < 7:
                     accel = 6.5
+                    self.mu = 1
                     if self.scan_Hi[i] < 5:
                         accel = 5
+                        self.mu = 2
                         if self.scan_Hi[i] < 3:
                             accel = 2
+                            self.mu = 3
                             if self.scan_Hi[i] < 1:
                                 accel = 1
+                                self.mu = 4
 
-
+        if self.accel_d_avg > 5*accel:
+            # print("whrjs",self.accel_d_avg, accel)
+            # accel *= 0.93
+            if self.mu == 0:
+                accel *= 0.99#self.accel_d_avg *= 0.9
+            elif self.mu == 1:
+                accel *= 0.99#self.accel_d_avg *= 0.9
+            elif self.mu == 2:
+                accel *= 0.99#self.accel_d_avg *= 0.9
+            elif self.mu == 3:
+                accel *= 0.99#self.accel_d_avg *= 0.9
+            elif self.mu == 4:
+                accel *= 0.99#self.accel_d_avg *= 0.9
+            else:
+                pass
+            accel = self.accel_d_avg
 
         if (A == 1 or B == 1) and (self.scan_Hi[540] > 4):
             accel = 12
             steering = 0
 
-        # print(accel)
+        #print(accel)
 
         self.ackermann_data.drive.steering_angle = steering
         self.ackermann_data.drive.steering_angle_velocity = 0
@@ -224,6 +248,15 @@ class Pure_Pursuit:
         self.speed_gain = 0
         self.steering_gain = 0
         self.gain_cont = 0
+
+        if len(self.accel_d) == 3:
+            self.accel_d = self.accel_d[1:]
+            self.accel_d.append(accel)
+            # self.accel_d_avg = (self.accel_d[0] + self.accel_d[1] + self.accel_d[2] + self.accel_d[3] + self.accel_d[4])/5
+            self.accel_d_avg = (self.accel_d[0] + self.accel_d[1] + self.accel_d[2])/3
+        elif len(self.accel_d) < 3:
+            self.accel_d.append(accel)
+            # self.accel_d_avg = 1
 
     def subCallback_scan(self,msg_sub):
         self.scan_angle_min = msg_sub.angle_min
@@ -463,4 +496,3 @@ if __name__ == '__main__':
     A = Pure_Pursuit()
     A.driving()
     rospy.spin()
-    
