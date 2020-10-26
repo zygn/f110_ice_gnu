@@ -69,8 +69,8 @@ class Pure_Pursuit:
         self.drive_pub = rospy.Publisher("/ICE/drive", AckermannDriveStamped, queue_size = 10 )
 
     def get_waypoint(self):
-#         file_wps = np.genfromtxt('../f1tenth_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
-        file_wps = np.genfromtxt('/catkin_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
+        file_wps = np.genfromtxt('../f1tenth_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
+        # file_wps = np.genfromtxt('/catkin_ws/src/car_duri/wp_vegas.csv',delimiter=',',dtype='float')
         temp_waypoint = []
         for i in file_wps:
             wps_point = [i[0],i[1],0]
@@ -182,7 +182,7 @@ class Pure_Pursuit:
                     if (i >= self.front_idx - 5) and (i <= self.front_idx + 5):
                         if(self.scan_filtered[i-1] < (self.THRESHOLD+14)):
                             steering_angle *= 1.8
-                            self.speed_gain = 1
+                            self.speed_gain += 0.1
                             #self.mu = 1
                             print("first num",steering_angle,self.scan_filtered[i-1], self.scan_filtered[i])
                         else:
