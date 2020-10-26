@@ -2,7 +2,7 @@
 
 <!--     <include file="$(find f1tenth_gym_ros)/launch/gym_bridge_host.launch" /> -->
 
-    <node name="Carminator" pkg="car_duri" type="ICE_test_Ryul.py" output="screen">
+    <node name="Carminator" pkg="car_duri" type="PETUCHIA.py" output="screen">
 
     </node>
 
