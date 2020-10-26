@@ -72,7 +72,7 @@ class Pure_Pursuit:
             wps_point = [i[0],i[1],0]
             temp_waypoint.append(wps_point)
             self.wp_num += 1
-        # print("wp_num",self.wp_num)
+        print("wp_num",self.wp_num)
         return temp_waypoint
 
     def find_desired_wp(self):
