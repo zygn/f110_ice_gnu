@@ -38,7 +38,7 @@ RUN cd /catkin_ws/src && rm -rf car_duri && echo $HOME
 # Cloning
 RUN cd /catkin_ws/src/ && \
     git clone https://github.com/zygn/f110_ice_gnu.git car_duri && \
-    chomd +x -R car_duri
+    chmod +x -R car_duri
 
 # Building your ROS packages
 RUN /bin/bash -c "source /opt/ros/melodic/setup.bash; cd catkin_ws; catkin_make; source devel/setup.bash"
